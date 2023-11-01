@@ -1,4 +1,4 @@
-module snaptrip.com/event-logger-go
+module github.com/SnaptripUK/event-logger-go
 
 go 1.19
 

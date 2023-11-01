@@ -2,7 +2,7 @@ package ingest
 
 import (
 	"context"
-	"snaptrip.com/event-logger-go/event"
+	"github.com/SnaptripUK/event-logger-go/event"
 )
 
 type Ingestor interface {

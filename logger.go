@@ -2,12 +2,11 @@ package eventlogger
 
 import (
 	"context"
-	"fmt"
+	"github.com/SnaptripUK/event-logger-go/event"
+	"github.com/SnaptripUK/event-logger-go/ingest"
 	"log"
 	"os"
 	"os/signal"
-	"snaptrip.com/event-logger-go/event"
-	"snaptrip.com/event-logger-go/ingest"
 	"sync"
 	"sync/atomic"
 	"syscall"
@@ -84,10 +83,10 @@ var (
 	once                sync.Once
 	mu                  sync.Mutex // used to lock around instance recreation checks
 	defaultDropCallback = func(event event.Event) {
-		log.Printf("Event channel is full. Event dropped: %#v\n", event)
+		log.Printf("event-logger-go: Event channel is full. Event dropped: %#v\n", event)
 	}
 	defaultErrorListener = func(msg string, err error) {
-		log.Printf("error: %s: %s\n", msg, err)
+		log.Printf("event-logger-go: error: %s: %s\n", msg, err)
 	}
 )
 
@@ -155,7 +154,7 @@ func initLogger(opts ...Option) {
 		shutdown:     make(chan struct{}),
 		options:      optsApplied,
 	}
-	log.Printf("Starting event logger with options: %#v\n", optsApplied)
+	log.Printf("event-logger-go: Starting event logger with options: %#v\n", optsApplied)
 	instance.ctx, instance.cancel = context.WithCancel(context.Background())
 	// Start the batch sender
 	instance.wg.Add(1)
@@ -217,7 +216,4 @@ func (el *eventLogger) recordBatch(ctx context.Context, batch []event.Event) {
 		el.errorListener("Error sending batch to TD", err)
 		return
 	}
-
-	fmt.Printf("Sending batch of %d events to TD\nPending count: %v\n",
-		len(batch), atomic.LoadInt64(&pendingEvents))
 }

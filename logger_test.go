@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/SnaptripUK/event-logger-go/event"
 	"github.com/stretchr/testify/assert"
 	"os"
-	"snaptrip.com/event-logger-go/event"
 	"testing"
 	"time"
 )

@@ -2,10 +2,10 @@ package ingest
 
 import (
 	"context"
+	"github.com/SnaptripUK/event-logger-go/event"
 	"github.com/stretchr/testify/assert"
 	"go.mongodb.org/mongo-driver/mongo/integration/mtest"
 	"os"
-	"snaptrip.com/event-logger-go/event"
 	"testing"
 )
 

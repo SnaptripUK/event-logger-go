@@ -3,11 +3,11 @@ package ingest
 import (
 	"context"
 	"fmt"
+	"github.com/SnaptripUK/event-logger-go/event"
 	"go.mongodb.org/mongo-driver/mongo/writeconcern"
 	"log"
 	"os"
 	"os/signal"
-	"snaptrip.com/event-logger-go/event"
 	"syscall"
 	"time"
 
@@ -44,7 +44,7 @@ func NewMongoDB() (*Mongodb, error) {
 	}
 	go func() {
 		<-stopChan
-		fmt.Println("Stopping MongoDB connection")
+		log.Println("event-logger-go: Stopping MongoDB connection")
 		_ = mongoClient.Disconnect(ctx)
 	}()
 	dbName := os.Getenv(envNameDbName)
@@ -68,7 +68,7 @@ func connectMongoDB(ctx context.Context, uri string) (*mongo.Client, error) {
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println("Connected to MongoDB!")
+	log.Println("event-logger-go: Connected to MongoDB!")
 	return client, nil
 }
 
@@ -97,7 +97,7 @@ func (mdb *Mongodb) Insert(ctx context.Context, events []event.Event) (err error
 		return
 	}
 
-	fmt.Printf("Bulk inserted %d events\n",
+	fmt.Printf("event-logger-go: Bulk inserted %d events\n",
 		len(events))
 	return
 }
