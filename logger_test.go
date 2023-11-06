@@ -30,7 +30,7 @@ func TestEventLogger_SubmitAndFlush(t *testing.T) {
 	mockIngestor := &MockIngestor{
 		InsertFunc: func(ctx context.Context, events []event.Event) error {
 			assert.Equal(t, 1, len(events), "Expected 1 event to be ingested")
-			assert.Equal(t, "test_event", events[0].Name, "Expected event name to be 'test_event'")
+			assert.Equal(t, "test_event", events[0].Cat, "Expected event name to be 'test_event'")
 			return nil
 		},
 	}
@@ -42,7 +42,7 @@ func TestEventLogger_SubmitAndFlush(t *testing.T) {
 
 	testEvent := event.Event{
 		CreatedAt: time.Now(),
-		Name:      "test_event",
+		Cat:       "test_event",
 		Attrs:     map[string]interface{}{"key1": "value1", "key2": "value2"},
 	}
 	SubmitEvent(testEvent)
@@ -73,9 +73,9 @@ func TestEventLogger_EventDropping(t *testing.T) {
 	)
 
 	// Try sending more events than the buffer can handle
-	SubmitEvent(event.Event{Name: "test_event_1"}) //handled immediately, channel back to 1
-	SubmitEvent(event.Event{Name: "test_event_2"}) //channel down to 0
-	SubmitEvent(event.Event{Name: "test_event_3"}) //should get dropped
+	SubmitEvent(event.Event{Cat: "test_event_1"}) //handled immediately, channel back to 1
+	SubmitEvent(event.Event{Cat: "test_event_2"}) //channel down to 0
+	SubmitEvent(event.Event{Cat: "test_event_3"}) //should get dropped
 
 	assert.Equal(t, 1, eventsDropped, "Expected 1 event to be dropped")
 	Close()
@@ -98,7 +98,7 @@ func TestEventLogger_IngestionError(t *testing.T) {
 		}),
 	)
 
-	SubmitEvent(event.Event{Name: "test_event"})
+	SubmitEvent(event.Event{Cat: "test_event"})
 	time.Sleep(2 * time.Second)
 	assert.True(t, errorOccurred, "Expected error to be logged")
 	Close()
@@ -107,7 +107,7 @@ func TestEventLogger_IngestionError(t *testing.T) {
 func TestEventLoggerShutdown(t *testing.T) {
 	mockIngestor := &MockIngestor{
 		InsertFunc: func(ctx context.Context, events []event.Event) error {
-			assert.ElementsMatch(t, []event.Event{{Name: "test_event"}}, events,
+			assert.ElementsMatch(t, []event.Event{{Cat: "test_event"}}, events,
 				"Expected 1 event to be ingested")
 			return nil
 		},
@@ -117,8 +117,17 @@ func TestEventLoggerShutdown(t *testing.T) {
 		WithIngestor(mockIngestor),
 	)
 
-	SubmitEvent(event.Event{Name: "test_event"})
+	SubmitEvent(event.Event{Cat: "test_event"})
 
 	// Perform the shutdown which should trigger the final flush
 	Close()
+}
+
+func TestEventLogger_Noop(t *testing.T) {
+	Init(
+		WithBatchSize(1),
+		WithFlushInterval(1*time.Second), //so it's long enough to not interfere with the test
+	)
+
+	SubmitEvent(event.Event{Cat: "test_event"})
 }

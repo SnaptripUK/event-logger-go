@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"reflect"
 	"sync"
 	"sync/atomic"
 	"syscall"
@@ -142,12 +143,9 @@ func initLogger(opts ...Option) {
 	for _, opt := range opts {
 		opt(&optsApplied)
 	}
-	if optsApplied.ingestor == nil {
-		ingestor, err := ingest.NewMongoDB()
-		if err != nil {
-			log.Fatal(err)
-		}
-		optsApplied.ingestor = ingestor
+	if optsApplied.ingestor == nil ||
+		reflect.ValueOf(optsApplied.ingestor).IsNil() {
+		optsApplied.ingestor, _ = ingest.NewNoop()
 	}
 	instance = &eventLogger{
 		eventChannel: make(chan event.Event, optsApplied.maxChannelBuffer),
@@ -189,6 +187,7 @@ func (el *eventLogger) batchSender(ctx context.Context) {
 	for {
 		select {
 		case <-el.shutdown:
+			log.Println("event-logger-go: Shutting down event logger")
 			if len(batch) > 0 {
 				el.recordBatch(ctx, batch) // Send remaining events before shutting down
 			}

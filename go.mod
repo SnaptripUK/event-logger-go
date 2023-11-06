@@ -3,6 +3,8 @@ module github.com/SnaptripUK/event-logger-go
 go 1.19
 
 require (
+	github.com/google/uuid v1.4.0
+	github.com/json-iterator/go v1.1.12
 	github.com/stretchr/testify v1.6.1
 	go.mongodb.org/mongo-driver v1.9.1
 )
@@ -13,6 +15,8 @@ require (
 	github.com/golang/snappy v0.0.1 // indirect
 	github.com/google/go-cmp v0.5.2 // indirect
 	github.com/klauspost/compress v1.13.6 // indirect
+	github.com/modern-go/concurrent v0.0.0-20180228061459-e0a39a4cb421 // indirect
+	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/xdg-go/pbkdf2 v1.0.0 // indirect
