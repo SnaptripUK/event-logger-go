@@ -3,14 +3,15 @@ package ingest
 import (
 	"bytes"
 	"context"
-	"encoding/hex"
 	"fmt"
-	"github.com/SnaptripUK/event-logger-go/event"
-	"github.com/google/uuid"
-	json "github.com/json-iterator/go"
+	"hash/fnv"
 	"log"
 	"net/http"
 	"sync"
+
+	json "github.com/json-iterator/go"
+
+	"github.com/SnaptripUK/event-logger-go/event"
 )
 
 const (
@@ -128,32 +129,27 @@ func (td *TdIngestor) doInsert(ctx context.Context, table string, events []event
 	return
 }
 
-// isSampled returns true if the event should be sampled based on a uuid v4 tag
-// it's a very simple context-less sampling that relies on the fact that digits in uuid v4 have similar distribution
-// and the last digit is "random" enough
+// isSampled returns true if the event should be sampled based on hashed tag
+// it's a very simple context-less sampling using fast, deterministic hashing
+// and the fact that last byte is "random" enough
 // TODO: move sampling up to the event logger
 func (td *TdIngestor) isSampled(cat eventCat, tag string) bool {
-	if _, err := uuid.Parse(tag); err != nil {
+	rate := td.samplingConfig[cat]
+	if rate <= 0 {
 		return false
 	}
-	samplingRate := td.samplingConfig[cat]
-	if samplingRate <= 0 {
-		return false
-	}
-	if samplingRate >= 100 {
+	if rate >= 100 {
 		return true
 	}
-	//two chars give resolution of 256
-	//one wouldn't be enough as it would give only 16 possible values, 6.25% resolution
-	lastTwoChars := tag[len(tag)-2:]
-	value, err := hex.DecodeString(lastTwoChars)
-	if err != nil {
-		return false
-	}
 
-	// Calculate the threshold for sampling based on the rate
-	// 256 possible values (byte), so we take the percentage of this
-	threshold := (256 * samplingRate) / 100
-	// If the numeric value is less than the threshold, sample this UUID
-	return int(value[0]) < int(threshold)
+	// deterministic hash → 0..255 bucket
+	h := fnv.New32a()
+	_, _ = h.Write([]byte(tag))
+	b := byte(h.Sum32()) // low 8 bits
+
+	// round up so small rates aren't biased low.
+	// threshold in [0..256]; sample when b < threshold.
+	// adding the divisor minus one rounds up to the nearest integer instead
+	threshold := int((uint32(rate)*256 + 99) / 100)
+	return int(b) < threshold
 }
